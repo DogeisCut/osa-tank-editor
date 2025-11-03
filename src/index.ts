@@ -10,6 +10,7 @@ type PropertyMetaHandler =
 		step?: number
 		min?: number
 		max?: number
+		allowZero?: boolean
 		default?: number
 	}
 	| {
@@ -37,14 +38,19 @@ type PropertyMetaHandler =
 		type: 'facingTypeSelector'
 	}
 	| {
-		type: 'array'
-		elementType: PropertyMetaHandler
+		type: 'shootSettingsEditor'
 	}
 	| {
 		type: 'gunEditor'
 	}
 	| {
 		type: 'alphaEditor'
+	}
+	| {
+		type: 'gunPropertiesEditor'
+	}
+	| {
+		type: 'gunPositionEditor'
 	}
 	| {
 		type: 'entityChoser'
@@ -59,7 +65,6 @@ type PropertyMeta = {
 	label?: string
 	tooltip?: string
 } | undefined //undefined will be hidden.
-
 
 class EntityBody {
 	ACCELERATION?: number
@@ -322,12 +327,7 @@ handler: ({ ${args} }) => {
 },
 once: ${once}
 */
-class EntityOn {
-	value: EntityOnEvent[] 
-	toCode(): string {
-		return ''
-	}
-}
+
 
 class EntityDefinition {
 	PARENT?: EntityClassReference
@@ -430,7 +430,7 @@ class EntityDefinition {
 	REROOT_UPGRADE_TREE?: EntityClassReference
 	ON_MINIMAP?: boolean
 	TURRETS?: Array<any>
-	ON?: EntityOn
+	ON?: EntityOnEvent[]
 	SHAKE?: Array<{
 		CAMERA_SHAKE?: {
 			DURATION: number
@@ -456,8 +456,7 @@ class EntityDefinition {
 	UPGRADEs_TIER_8: EntityClassReference
 	UPGRADEs_TIER_9: EntityClassReference
 }
-
-const EntityDefinitionPropertyMetadata: Record<keyof EntityDefinition, PropertyMeta> = {
+const EntityDefinitionMeta: Record<keyof EntityDefinition, PropertyMeta> = {
 	PARENT: {
 		handler: {
 			type: 'entityChoser',
@@ -560,7 +559,12 @@ const EntityDefinitionPropertyMetadata: Record<keyof EntityDefinition, PropertyM
 	SKILL: undefined,
 	VALUE: undefined,
 	ALT_ABILITIES: undefined,
-	GUNS: undefined,
+	GUNS: {
+		label: "Guns",
+		handler: {
+			type: "gunEditor"
+		}
+	},
 	CONNECT_CHILDREN_ON_CAMERA: undefined,
 	GUN_STAT_SCALE: undefined,
 	MAX_CHILDREN: undefined,
@@ -585,7 +589,7 @@ const EntityDefinitionPropertyMetadata: Record<keyof EntityDefinition, PropertyM
 	UPGRADEs_TIER_7: undefined,
 	UPGRADEs_TIER_8: undefined,
 	UPGRADEs_TIER_9: undefined
-}
+} as const
 
 type GunPosition = {
 	LENGTH?: number;
@@ -596,6 +600,16 @@ type GunPosition = {
 	ANGLE?: number;
 	DELAY?: number;
 }
+const GunPositionMeta: Record<keyof GunPosition, PropertyMeta> = {
+	LENGTH: undefined,
+	WIDTH: undefined,
+	ASPECT: undefined,
+	X: undefined,
+	Y: undefined,
+	ANGLE: undefined,
+	DELAY: undefined
+} as const
+
 
 type ShootSettings = {
     reload?: number;
@@ -610,6 +624,63 @@ type ShootSettings = {
     spray?: number;
     resist?: number;
 }
+const ShootSettingsMeta: Record<keyof ShootSettings, PropertyMeta> = {
+	reload: {
+		handler: { type: "number", min: 0 },
+		label: "Reload",
+		tooltip: "Delay between shots. Lower is faster."
+	},
+	recoil: {
+		handler: { type: "number", min: 0 },
+		label: "Recoil",
+		tooltip: "How much the tank moves backward when firing."
+	},
+	shudder: {
+		handler: { type: "number", min: 0 },
+		label: "Shudder",
+		tooltip: "Small random angle applied to shots."
+	},
+	size: {
+		handler: { type: "number", min: 0 },
+		label: "Bullet Size",
+		tooltip: "The visual and collision size of the projectile."
+	},
+	damage: {
+		handler: { type: "number", min: 0 },
+		label: "Damage",
+		tooltip: "How much damage the projectile deals."
+	},
+	pen: {
+		handler: { type: "number", min: 0 },
+		label: "Penetration",
+		tooltip: "How far the projectile can travel through targets."
+	},
+	speed: {
+		handler: { type: "number", min: 0 },
+		label: "Speed",
+		tooltip: "How fast the projectile travels."
+	},
+	maxSpeed: {
+		handler: { type: "number", min: 0 },
+		label: "Max Speed",
+		tooltip: "Cap on the projectile's travel speed."
+	},
+	density: {
+		handler: { type: "number", min: 0 },
+		label: "Density",
+		tooltip: "How heavy the projectile is. Affects collisions."
+	},
+	spray: {
+		handler: { type: "number", min: 0 },
+		label: "Spray",
+		tooltip: "How inaccurate projectiles are (random direction)."
+	},
+	resist: {
+		handler: { type: "number", min: 0 },
+		label: "Resistance",
+		tooltip: "Reduces damage taken by this projectile."
+	}
+} as const
 
 type GunProperties = {
 	ON_SHOOT?: string
@@ -640,16 +711,226 @@ type GunProperties = {
 	TYPE?: string
 	LABEL?: string
 }
+const GunPropertiesMeta: Record<keyof GunProperties, PropertyMeta> = {
+	ON_SHOOT: undefined,
+	AUTOFIRE: {
+		handler: { type: "toggle" },
+		label: "Auto Fire",
+		tooltip: "Automatically fires without player input."
+	},
+	ALT_FIRE: {
+		handler: { type: "toggle" },
+		label: "Alt Fire",
+		tooltip: "Fires when using alternate trigger."
+	},
+	FIXED_RELOAD: {
+		handler: { type: "toggle" },
+		label: "Fixed Reload",
+		tooltip: "Ignores dynamic reload scaling."
+	},
+	STAT_CALCULATOR: undefined,
+	WAIT_TO_CYCLE: {
+		handler: { type: "toggle" },
+		label: "Wait To Cycle",
+		tooltip: "Waits for bullets to finish before cycling."
+	},
+	BULLET_STATS: undefined,
+	SHOOT_SETTINGS: {
+		handler: { type: "shootSettingsEditor" },
+		label: "Shoot Settings",
+		tooltip: "Defines various firing characteristics."
+	},
+	MAX_CHILDREN: {
+		handler: { type: "number", min: 0 },
+		label: "Max Children",
+		tooltip: "Maximum spawned entities from this gun."
+	},
+	MAX_BULLETS: {
+		handler: { type: "number", min: 0 },
+		label: "Max Bullets",
+		tooltip: "Limit of active bullets this gun can produce."
+	},
+	SYNCS_SKILLS: {
+		handler: { type: "toggle" },
+		label: "Sync Skills",
+		tooltip: "Whether this gun's stats sync with player skill levels."
+	},
+	NEGATIVE_RECOIL: {
+		handler: { type: "toggle" },
+		label: "Negative Recoil",
+		tooltip: "Reverses recoil direction when firing."
+	},
+	INDEPENDENT_CHILDREN: {
+		handler: { type: "toggle" },
+		label: "Independent Children",
+		tooltip: "Spawned entities behave independently of the master."
+	},
+	BORDERLESS: {
+		handler: { type: "toggle" },
+		label: "Borderless",
+		tooltip: "Projectiles can leave the map bounds."
+	},
+	DRAW_FILL: {
+		handler: { type: "toggle" },
+		label: "Draw Fill",
+		tooltip: "Whether to fill projectile visuals."
+	},
+	SPAWN_OFFSET: {
+		handler: { type: "number" },
+		label: "Spawn Offset",
+		tooltip: "Distance from gun muzzle to spawn projectile."
+	},
+	DESTROY_OLDEST_CHILD: {
+		handler: { type: "toggle" },
+		label: "Destroy Oldest Child",
+		tooltip: "Deletes oldest children when limit is reached."
+	},
+	SHOOT_ON_DEATH: {
+		handler: { type: "toggle" },
+		label: "Shoot On Death",
+		tooltip: "Triggers this gun when entity dies."
+	},
+	COLOR: {
+		handler: { type: "color" },
+		label: "Projectile Color",
+		tooltip: "Visual color of the bullets or entities spawned."
+	},
+	NO_LIMITATIONS: {
+		handler: { type: "toggle" },
+		label: "No Limitations",
+		tooltip: "Removes various firing limitations."
+	},
+	ALPHA: {
+		handler: { type: "number", min: 0, max: 1 },
+		label: "Alpha",
+		tooltip: "Transparency of projectiles spawned by this gun."
+	},
+	STROKE_WIDTH: {
+		handler: { type: "number", min: 0 },
+		label: "Stroke Width",
+		tooltip: "Outline width for drawn bullets."
+	},
+	DRAW_ABOVE: {
+		handler: { type: "toggle" },
+		label: "Draw Above",
+		tooltip: "Renders bullets above all other layers."
+	},
+	STACK_GUN: {
+		handler: { type: "toggle" },
+		label: "Stack Gun",
+		tooltip: "Allows multiple bullets to spawn simultaneously."
+	},
+	IDENTIFIER: {
+		handler: { type: "textBox" },
+		label: "Identifier",
+		tooltip: "A custom ID string for this gun."
+	},
+	TYPE: {
+		handler: { type: "entityChoser", default: "bullet" },
+		label: "Bullet Type",
+		tooltip: "Which entity this gun spawns (e.g., bullet, drone, etc.)."
+	},
+	LABEL: {
+		handler: { type: "textBox" },
+		label: "Gun Label",
+		tooltip: "Display label for this gun. Seen when killed by it."
+	}
+} as const
 
 type Gun = {
 	POSITION: GunPosition;
 	PROPERTIES?: GunProperties;
 }
+const GunMeta: Record<keyof Gun, PropertyMeta> = {
+	POSITION: {
+		label: "Position",
+		tooltip: "Defines how the gun is physically positioned on the entity.",
+		handler: { type: "gunPositionEditor" }
+	},
+	PROPERTIES: {
+		label: "Properties",
+		tooltip: "Settings that control gun behavior, visuals, and effects.",
+		handler: { type: "gunPropertiesEditor" }
+	}
+} as const
 
 class OSAEditorFile {
 	name: string
 	definition: EntityDefinition
 }
+
+class OSAEditorSave {
+	knownFiles: {
+		path: string,
+		definition: string
+	}[]
+}
+
+function renderEntityDefinitionProperty(property: PropertyMeta): void {
+	if (!property || !property.handler) return
+
+	switch (property.handler.type) {
+		case 'textBox':
+		case 'multiline':
+			renderTextInput(property)
+			break
+
+		case 'number':
+			renderNumberInput(property)
+			break
+
+		case 'toggle':
+			renderToggle(property)
+			break
+
+		case 'color':
+			renderColorPicker(property)
+			break
+
+		case 'select':
+			renderSelect(property)
+			break
+
+		case 'motionTypeSelector':
+			renderMotionTypeSelector(property)
+			break
+
+		case 'facingTypeSelector':
+			renderFacingTypeSelector(property)
+			break
+
+		case 'array':
+			renderArray(property)
+			break
+
+		case 'alphaEditor':
+			renderAlphaEditor(property)
+			break
+
+		case 'entityChoser':
+			renderEntityChooser(property)
+			break
+
+		case 'bodyEditor':
+			renderBodyEditor(property)
+			break
+
+		default:
+			console.warn(`Unknown handler type: ${(property.handler as any).type}`)
+	}
+}
+
+function renderNumberInput(property: PropertyMeta) {
+	const handler = property!.handler!
+	console.log(`Render number input "${property!.label}" with default ${handler.default}`)
+}
+
+function renderEventHandler(property: PropertyMeta) {
+	const handler = property!.handler!
+	if (handler.type !== 'eventHandler') return
+	console.log(`Render event handler editor for supported events:`, handler.supportedEvents)
+}
+
 
 function render(): void {
 
