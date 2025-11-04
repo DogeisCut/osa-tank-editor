@@ -297,7 +297,7 @@ type Necro = boolean | number[] | string[]
 type EntityClassReference = string | string[]
 type EntityOnEvent = {
 	event: "fire" | "altFire"
-	handler: { args: "body, gun, globalMasterStore", source: string } // needs to stringify as a function!
+	handler: { args: "body, gun, globalMasterStore, child, masterStore, gunStore", source: string } // needs to stringify as a function!
 	once?: boolean
 } | {
 	event: "tick"
@@ -305,6 +305,14 @@ type EntityOnEvent = {
 	once?: boolean
 } | {
 	event: "define"
+	handler: { args: "body, set", source: string }
+	once?: boolean
+} | {
+	event: "skillUp"
+	handler: { args: "stat", source: string }
+	once?: boolean
+} | {
+	event: "upgrade"
 	handler: { args: "body", source: string }
 	once?: boolean
 } | {
@@ -312,8 +320,16 @@ type EntityOnEvent = {
 	handler: { args: "body, killers, killTools", source: string }
 	once?: boolean
 } | {
+	event: "kill"
+	handler: { args: "body, entity", source: string }
+	once?: boolean
+} | {
+	event: "control"
+	handler: { args: "body", source: string }
+	once?: boolean
+} | {
 	event: "collide"
-	handler: { args: "instance, other", source: string }
+	handler: { args: "body, instance, other", source: string }
 	once?: boolean
 } | {
 	event: "damage"
