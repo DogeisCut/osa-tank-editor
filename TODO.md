@@ -34,6 +34,7 @@
 - [ ] **Entity Data**
     - [ ] Every property that you can edit in entity definitions is addable and editable in the editor.
         - [ ] Property Metadata (tooltips, labels) 
+    - [ ] Import entity code to edit it!
 ---
 - [ ] **External Entities**
     - [ ] Entities the user has edited can be saved to a file, it will also be stored in `OSAEditorSave` where the user can select that entity in properties that require an entity.
