@@ -17,6 +17,7 @@
             - [ ] Take Screenshot (Hides UI and makes BG transparent.)
         - [ ] Selects `Guns` in defition tree to enter the visual gun editor.
             - [ ] Keybinds for adding, deleting, and modifying guns, also shows buttons. Gun follows mouse and places when clicked.
+                - [ ] Presets for trappers, drones, etc
                 - [ ] Shift to snap to angle.
                 - [ ] Alt to adjust gun position instead of angle.
                 - [ ] Ctrl to adjust gun width and height based on mouse.
@@ -26,6 +27,7 @@
                 - [ ] Undo and Redo
                 - [ ] It's important that this is polished and feels nice to use, accidental barrel placements make it feel clunky.
         - [ ] Selects `Turrets` in defition tree to enter the visual gun editor.
+            - [ ] Customizable presets/generators for things such as `makeDeco` or `addAura`.
             - [ ] Similar to the gun editor, though how this works will be undecided as turrets rely on other entites and work slightly differently to guns in terms of placement.
             - [ ] Code will need to be set up to handle loading external entities. See: "External Entities"
 ---
@@ -37,6 +39,7 @@
     - [ ] Entities the user has edited can be saved to a file, it will also be stored in `OSAEditorSave` where the user can select that entity in properties that require an entity.
         - [ ] Users can remove the file from `OSAEditorSave` and it wont show.
     - [ ] It's likley that a few (maybe not all) entities will come with the editor and be selectable as well.
+    - [ ] Multiple entities may be in a single file due to generated entities such as deco or auras.
 ---
 - [ ] **Styling**
     - [ ] Flat modern sleek design. Ideally. (The last editor was very ugly!)
