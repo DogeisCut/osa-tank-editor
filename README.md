@@ -30,6 +30,7 @@ Additional details and planned updates can be found in the [TODO list](https://g
 
 ## Structure
 The project currently uses **Vite** with **TypeScript** as its foundation.  
+It is likely this structure (such as index.ts) will split up into multiple files as the project evolves!
 ```
 osa-tank-editor/
 ├─ index.html # Entry HTML file (currently minimal)
