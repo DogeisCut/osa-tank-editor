@@ -1,0 +1,42 @@
+- [ ] **Element Rendering and Editors**
+    - [ ] Render top bar (File, Edit, etc).
+    - [ ] Render tabs.
+    - [ ] Render tab contents.
+        - [ ] Properties are rendered based on the `PropertyMeta`, including subproperties.
+        - [ ] Definiton tree.
+            - [ ] Property adder/chooser/remover.
+            - [ ] Editors for unique properties.
+                - [ ] Numbers
+                - [ ] Text (Inputbox, Multiline)
+                - [ ] Guns
+                    - [ ] Can edit position and properties precisely here, only way to edit properties
+                        - [ ] `SHOOT_SETTINGS` has every `g` listed and has the option to combine them. You can also edit and make your own stats from scratch.
+                            - [ ] Could potentially show a shoot speed/arc preview.
+                - [ ] TODO: Fill this out
+        - [ ] Visual Preview
+            - [ ] Take Screenshot (Hides UI and makes BG transparent.)
+        - [ ] Selects `Guns` in defition tree to enter the visual gun editor.
+            - [ ] Keybinds for adding, deleting, and modifying guns, also shows buttons. Gun follows mouse and places when clicked.
+                - [ ] Shift to snap to angle.
+                - [ ] Alt to adjust gun position instead of angle.
+                - [ ] Ctrl to adjust gun width and height based on mouse.
+                - [ ] A to adjust aspect, holding Ctrl adjusts the bottom aspect instead.
+                - [ ] Can select guns by clicking them in the preview OR in the definition tree
+                - [ ] Can be deleted with delete/backspace or the delete button.
+                - [ ] Undo and Redo
+                - [ ] It's important that this is polished and feels nice to use, accidental barrel placements make it feel clunky.
+        - [ ] Selects `Turrets` in defition tree to enter the visual gun editor.
+            - [ ] Similar to the gun editor, though how this works will be undecided as turrets rely on other entites and work slightly differently to guns in terms of placement.
+            - [ ] Code will need to be set up to handle loading external entities. See: "External Entities"
+---
+- [ ] **Entity Data**
+    - [ ] Every property that you can edit in entity definitions is addable and editable in the editor.
+        - [ ] Property Metadata (tooltips, labels) 
+---
+- [ ] **External Entities**
+    - [ ] Entities the user has edited can be saved to a file, it will also be stored in `OSAEditorSave` where the user can select that entity in properties that require an entity.
+        - [ ] Users can remove the file from `OSAEditorSave` and it wont show.
+    - [ ] It's likley that a few (maybe not all) entities will come with the editor and be selectable as well.
+---
+- [ ] **Styling**
+    - [ ] Flat modern sleek design. Ideally. (The last editor was very ugly!)

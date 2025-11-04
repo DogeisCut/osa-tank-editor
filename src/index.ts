@@ -882,6 +882,8 @@ class OSAEditorSave {
 	}[]
 }
 
+// i left this broken cause i got really tired halfway through writing it...
+// Probably gonna take a different approach anyways, since this likely needs to be recursive due to certain editors.
 function renderEntityDefinitionProperty(property: PropertyMeta): void {
 	if (!property || !property.handler) return
 
