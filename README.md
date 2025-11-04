@@ -16,7 +16,7 @@ A modern successor to [Arras-Tank-Builder](https://github.com/DogeisCut/Arras-Ta
 
 ## Overview
 **osa-tank-editor** is a visual tool for creating and editing entities for [Open Source Arras](https://github.com/AE0hello/open-source-arras).  
-It aims to simplify the process of building and adjusting tanks/entities, and offer a clean interface for server __arras.io__ private server developers!
+It aims to simplify the process of building and adjusting tanks/entities, and offers a clean interface for server __arras.io__ private server developers and contributors alike!
 
 
 ---
