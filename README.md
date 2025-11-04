@@ -28,6 +28,34 @@ Additional details and planned updates can be found in the [TODO list](https://g
 
 ---
 
+## Structure
+The project currently uses **Vite** with **TypeScript** as its foundation.  
+```
+osa-tank-editor/
+├─ index.html # Entry HTML file (currently minimal)
+├─ src/
+│ ├─ index.ts # Main TypeScript entry point, defines core types and render logic
+│ └─ style.css # Placeholder stylesheet
+├─ package.json # NPM scripts and dependencies
+└─ tsconfig.json # TypeScript configuration
+```
+
+### Build and Development
+The available NPM scripts:
+
+```json
+"scripts": {
+	"dev": "vite",
+	"build": "tsc && vite build",
+	"preview": "vite preview"
+}
+```
+- `npm run dev`: Launches a local development server
+- `npm run build`: Compiles TypeScript and builds a production bundle
+- `npm run preview`: Serves the build output for testing
+
+---
+
 ## Contributing
 Contributions are encouraged.  
 If you'd like to assist with development or fix an issue, feel free to submit a pull request.  
@@ -41,5 +69,5 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 ---
 
 <div align="center">
-:3
+Thank you! :3
 </div>
