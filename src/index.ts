@@ -775,7 +775,7 @@ class GStatCombiner {
 				return `{ ${entries} }`
 			}
 		}).join(", ")
-		return `combineStats(${result})`
+		return `combineStats([${result}])`
 	}
 }
 type GunProperties = {
@@ -980,6 +980,7 @@ let openTabs: OSAEditorFile[] = [
 ]
 
 let currentFile: number = 0
+let loadedDefinitions: Map<string, EntityDefinition>
 let save: OSAEditorSave = new OSAEditorSave()
 
 function serializeToCode(value: any, indent: number = 0): string {

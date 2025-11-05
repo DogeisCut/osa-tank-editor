@@ -45,3 +45,6 @@
 ---
 - [ ] **Styling**
     - [ ] Flat modern sleek design. Ideally. (The last editor was very ugly!)
+---
+- [ ] **Other**
+    - [ ] Automatic build and deployment to Github Pages
