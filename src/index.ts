@@ -66,20 +66,54 @@ type PropertyMeta = {
 	tooltip?: string
 } | undefined //undefined will be hidden.
 
-class EntityBody {
-	ACCELERATION?: number
-	SPEED?: number
-	HEALTH?: number
-	RESIST?: number
-	SHIELD?: number
-	REGEN?: number
-	DAMAGE?: number
-	PENETRATION?: number
+
+type BaseBodyTypes =
+	"ACCEL" |
+	"SPEED" |
+	"HEALTH" |
+	"RESIST" |
+	"SHIELD" |
+	"REGEN" |
+	"DAMAGE" |
+	"PENETRATION" |
+	"FOV" |
+	"DENSITY"
+class BaseMultiplier<BaseType extends BaseBodyTypes> {
+	value: number
+	base: BaseType
+
+	constructor(base: BaseType, value: number) {
+		this.base = base
+		this.value = value
+	}
+
+	static createBaseMultiplier<BaseType extends BaseBodyTypes>(
+		base: BaseType,
+		value: number = 0
+	): BaseMultiplier<BaseType> {
+		return new BaseMultiplier(base, value)
+	}
+
+	toCode() {
+		return `base.${this.base} * ${this.value}`
+	}
+}
+
+
+type EntityBody = {
+	ACCELERATION?: number | BaseMultiplier<"ACCEL">
+	SPEED?: number | BaseMultiplier<"SPEED">
+	HEALTH?: number | BaseMultiplier<"HEALTH">
+	RESIST?: number | BaseMultiplier<"RESIST">
+	SHIELD?: number | BaseMultiplier<"SHIELD">
+	REGEN?: number | BaseMultiplier<"REGEN">
+	DAMAGE?: number | BaseMultiplier<"DAMAGE">
+	PENETRATION?: number | BaseMultiplier<"PENETRATION">
 	RANGE?: number
-	FOV?: number
+	FOV?: number | BaseMultiplier<"FOV">
 	SHOCK_ABSORB?: number
 	RECOIL_MULTIPLIER?: number
-	DENSITY?: number
+	DENSITY?: number | BaseMultiplier<"DENSITY">
 	STEALTH?: number
 	PUSHABILITY?: number
 	KNOCKBACK?: number
@@ -295,55 +329,69 @@ type Invisible = [number, number]
 type Alpha = number | [number, number]
 type Necro = boolean | number[] | string[]
 type EntityClassReference = string | string[]
-type EntityOnEvent = {
-	event: "fire" | "altFire"
-	handler: { args: "body, gun, globalMasterStore, child, masterStore, gunStore", source: string } // needs to stringify as a function!
-	once?: boolean
-} | {
-	event: "tick"
-	handler: { args: "body", source: string }
-	once?: boolean
-} | {
-	event: "define"
-	handler: { args: "body, set", source: string }
-	once?: boolean
-} | {
-	event: "skillUp"
-	handler: { args: "stat", source: string }
-	once?: boolean
-} | {
-	event: "upgrade"
-	handler: { args: "body", source: string }
-	once?: boolean
-} | {
-	event: "death"
-	handler: { args: "body, killers, killTools", source: string }
-	once?: boolean
-} | {
-	event: "kill"
-	handler: { args: "body, entity", source: string }
-	once?: boolean
-} | {
-	event: "control"
-	handler: { args: "body", source: string }
-	once?: boolean
-} | {
-	event: "collide"
-	handler: { args: "body, instance, other", source: string }
-	once?: boolean
-} | {
-	event: "damage"
-	handler: { args: "body, damageInflictor, damageTool", source: string }
-	once?: boolean
-}
-/*
-event: "${event}",
-handler: ({ ${args} }) => {
-	${source}
-},
-once: ${once}
-*/
 
+type EntityOnEvent =
+	| "fire" | "altFire"
+	| "tick"
+	| "define"
+	| "skillUp"
+	| "upgrade"
+	| "death"
+	| "kill"
+	| "control"
+	| "collide"
+	| "damage"
+class EntityOn {
+	onEvent: EntityOnEvent
+	source: string
+	once?: boolean
+
+	constructor(onEvent: EntityOnEvent, source: string, once?: boolean) {
+		this.onEvent = onEvent
+		this.source = source
+		this.once = once
+	}
+
+	static getEventArgs(onEvent: EntityOnEvent): string {
+		switch (onEvent) {
+			case "fire":
+			case "altFire":
+				return "body, gun, globalMasterStore, child, masterStore, gunStore"
+			case "tick":
+				return "body"
+			case "define":
+				return "body, set"
+			case "skillUp":
+				return "stat"
+			case "upgrade":
+				return "body"
+			case "death":
+				return "body, killers, killTools"
+			case "kill":
+				return "body, entity"
+			case "control":
+				return "body"
+			case "collide":
+				return "body, instance, other"
+			case "damage":
+				return "body, damageInflictor, damageTool"
+		}
+	}
+
+	toCode(): string {
+		let result = `{
+			event: "${this.onEvent}",
+			handler: ({ ${EntityOn.getEventArgs(this.onEvent)} }) => {
+		${this.source.split("\n").map(line => "\t\t" + line).join("\n")}
+			}
+		}`
+		if (this.once !== undefined) {
+			result += `,
+	once: ${this.once}`
+		}
+		return result
+	}
+}
 
 class EntityDefinition {
 	PARENT?: EntityClassReference
@@ -446,7 +494,7 @@ class EntityDefinition {
 	REROOT_UPGRADE_TREE?: EntityClassReference
 	ON_MINIMAP?: boolean
 	TURRETS?: Array<any>
-	ON?: EntityOnEvent[]
+	ON?: EntityOn[]
 	SHAKE?: Array<{
 		CAMERA_SHAKE?: {
 			DURATION: number
@@ -698,15 +746,47 @@ const ShootSettingsMeta: Record<keyof ShootSettings, PropertyMeta> = {
 	}
 } as const
 
+class GStat {
+	statName: string
+
+	constructor(statName: string) {
+		this.statName = statName
+	}
+
+	toCode() {
+		return `g.${this.statName}`
+	}
+}
+class GStatCombiner {
+	stats: (GStat | ShootSettings)[]
+
+	constructor(stats: (GStat | ShootSettings)[]) {
+		this.stats = stats
+	}
+
+	toCode() {
+		let result = this.stats.map(stat => {
+			if ('toCode' in stat && typeof stat.toCode === 'function') {
+				return stat.toCode()
+			} else {
+				let entries = Object.entries(stat)
+					.map(([key, value]) => `${key}: ${value}`)
+					.join(", ")
+				return `{ ${entries} }`
+			}
+		}).join(", ")
+		return `combineStats(${result})`
+	}
+}
 type GunProperties = {
 	ON_SHOOT?: string
 	AUTOFIRE?: boolean
 	ALT_FIRE?: boolean
 	FIXED_RELOAD?: boolean
-	STAT_CALCULATOR?: string
+	STAT_CALCULATOR?: number | string
 	WAIT_TO_CYCLE?: boolean
 	BULLET_STATS?: string | number[] | "master"
-	SHOOT_SETTINGS?: ShootSettings
+	SHOOT_SETTINGS?: ShootSettings | GStat | GStatCombiner
 	MAX_CHILDREN?: number
 	MAX_BULLETS?: number
 	SYNCS_SKILLS?: boolean
@@ -872,19 +952,108 @@ const GunMeta: Record<keyof Gun, PropertyMeta> = {
 
 class OSAEditorFile {
 	name: string
-	definition: EntityDefinition
+	definitions: {
+		primary: EntityDefinition,
+		sub: EntityDefinition[]
+	} 
+	constructor(name: string, definitions: {primary: EntityDefinition, sub: EntityDefinition[]}) {
+		this.name = name
+		this.definitions = definitions
+	}
 }
 
 class OSAEditorSave {
 	knownFiles: {
 		path: string,
 		definition: string
-	}[]
+	}[] = []
 }
+
+let openTabs: OSAEditorFile[] = [
+	new OSAEditorFile(
+		"Unnamed Entity",
+		{
+			primary: new EntityDefinition(),
+			sub: []
+		}
+	)
+]
+
+let currentFile: number = 0
+let save: OSAEditorSave = new OSAEditorSave()
+
+function serializeToCode(value: any, indent: number = 0): string {
+	let pad = '\t'.repeat(indent)
+
+	if (value === null) return 'null'
+	if (Array.isArray(value)) {
+		let items = value.map(v => serializeToCode(v, indent + 1)).join(', ')
+		return `[${items}]`
+	}
+	if (typeof value === 'object') {
+		if ('toCode' in value && typeof value.toCode === 'function') {
+			return value.toCode()
+		}
+		let entries = Object.entries(value)
+			.filter(([, v]) => v !== undefined)
+			.map(([k, v]) => `${pad}\t${k}: ${serializeToCode(v, indent + 1)}`)
+			.join(',\n')
+		return `{\n${entries}\n${pad}}`
+	}
+	if (typeof value === 'string') return `"${value}"`
+	return String(value)
+}
+
+openTabs[currentFile].definitions.primary.PARENT = "genericTank"
+openTabs[currentFile].definitions.primary.LABEL = "Basic"
+openTabs[currentFile].definitions.primary.DANGER = 4
+openTabs[currentFile].definitions.primary.BODY = {
+	ACCELERATION: BaseMultiplier.createBaseMultiplier("ACCEL", 1),
+	SPEED: BaseMultiplier.createBaseMultiplier("SPEED", 1),
+	HEALTH: BaseMultiplier.createBaseMultiplier("HEALTH", 1),
+	DAMAGE: BaseMultiplier.createBaseMultiplier("DAMAGE", 1),
+	PENETRATION: BaseMultiplier.createBaseMultiplier("PENETRATION", 1),
+	SHIELD: BaseMultiplier.createBaseMultiplier("SHIELD", 1),
+	REGEN: BaseMultiplier.createBaseMultiplier("REGEN", 1),
+	FOV: BaseMultiplier.createBaseMultiplier("FOV", 1),
+	DENSITY: BaseMultiplier.createBaseMultiplier("DENSITY", 1),
+	PUSHABILITY: 1,
+	HETERO: 3
+}
+openTabs[currentFile].definitions.primary.GUNS = [
+	{
+		POSITION: {
+			LENGTH: 18,
+			WIDTH: 8,
+			ASPECT: 1,
+			X: 0,
+			Y: 0,
+			ANGLE: 0,
+			DELAY: 0
+		},
+		PROPERTIES: {
+			SHOOT_SETTINGS: new GStatCombiner([ new GStat("basic"), new GStat("desmos"), { size: 0.92, recoil: 0.2 } ]),
+			TYPE: "bullet",
+			COLOR: 16,
+			LABEL: "",
+			STAT_CALCULATOR: 0,
+			WAIT_TO_CYCLE: false,
+			AUTOFIRE: false,
+			SYNCS_SKILLS: false,
+			MAX_CHILDREN: 0,
+			ALT_FIRE: false,
+			NEGATIVE_RECOIL: false
+		} 
+	}
+]
+openTabs[currentFile].definitions.primary.ON = []
+openTabs[currentFile].definitions.primary.ON.push(new EntityOn("define", "body.immuneToTiles = true"))
+
+console.log(serializeToCode(openTabs[currentFile].definitions.primary))
 
 // i left this broken cause i got really tired halfway through writing it...
 // Probably gonna take a different approach anyways, since this likely needs to be recursive due to certain editors.
-function renderEntityDefinitionProperty(property: PropertyMeta): void {
+/*function renderEntityDefinitionProperty(property: PropertyMeta): void {
 	if (!property || !property.handler) return
 
 	switch (property.handler.type) {
@@ -948,6 +1117,7 @@ function renderEventHandler(property: PropertyMeta) {
 	if (handler.type !== 'eventHandler') return
 	console.log(`Render event handler editor for supported events:`, handler.supportedEvents)
 }
+*/
 
 
 function render(): void {
