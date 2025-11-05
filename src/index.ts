@@ -328,7 +328,7 @@ type OSAColor = OSAColors | HexCode |
 type Invisible = [number, number]
 type Alpha = number | [number, number]
 type Necro = boolean | number[] | string[]
-type EntityClassReference = string | string[]
+type EntityClassReference = string | string[] | [string | string[], EntityDefinition]
 
 type EntityOnEvent =
 	| "fire" | "altFire"
