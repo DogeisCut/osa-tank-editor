@@ -758,6 +758,7 @@ class GStat {
 	}
 }
 class GStatCombiner {
+	// Technically, GStatCombiners can contain each other but i dont want to deal with the codegen behind that right now
 	stats: (GStat | ShootSettings)[]
 
 	constructor(stats: (GStat | ShootSettings)[]) {
@@ -1003,6 +1004,13 @@ function serializeToCode(value: any, indent: number = 0): string {
 	}
 	if (typeof value === 'string') return `"${value}"`
 	return String(value)
+}
+
+function deserializeFromCode(code: string): EntityDefinition {
+	// Run the string in a sandboxed enviroment
+	// provide `g`, `base` and `combineStats`, making them all return something that can be detected in stage 4
+	// convert the return value of the sandbox into an EntityDefinition
+	// convert `g`, `base` and `combineStats` uses back into `GStat`, `BaseMultiplier` and `GStatCombiner`s
 }
 
 openTabs[currentFile].definitions.primary.PARENT = "genericTank"

@@ -26,6 +26,7 @@
                 - [ ] Can be deleted with delete/backspace or the delete button.
                 - [ ] Undo and Redo
                 - [ ] It's important that this is polished and feels nice to use, accidental barrel placements make it feel clunky.
+                - [ ] Could also just have a togglable transform gizmo
         - [ ] Selects `Turrets` in defition tree to enter the visual gun editor.
             - [ ] Customizable presets/generators for things such as `makeDeco` or `addAura`.
             - [ ] Similar to the gun editor, though how this works will be undecided as turrets rely on other entites and work slightly differently to guns in terms of placement.
